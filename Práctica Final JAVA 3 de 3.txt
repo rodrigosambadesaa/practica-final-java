@@ -1,0 +1,28 @@
+Práctica Final JAVA 3/3 
+ 
+ 
+ 
+ 
+ 
+Garaje de reparación y revisión de vehículos (Parte 3 - final) 
+ 
+Objetivos 
+• Practicar la declaración y uso de excepciones propias 
+• Practicar el uso de paquetes propios 
+• Entender las ventajas de la encapsulación 
+• Practicar el uso de la clase ArrayList, y la implementación de una interfaz para su ordenación. 
+ 
+Descripción general 
+ 
+Tomando como base la práctica anterior, añade el siguiente comportamiento: 
+• Las excepciones has lanzado  en la Parte 2 de la práctica , deben convertirse  ahora a 
+excepciones propias, generadas por el programador y declaradas dentro de un paquete del 
+mismo proyecto llamado ExcepcionesGaraje. 
+• Se cambiará la implementación de la lista de trabajos de array  a ArrayList. Si se ha 
+diseñado correctamente la estru ctura de cla ses y métodos , atendiendo a l concepto de 
+encapsulación, este cambio sólo debería afectar al código de los métodos que gestionan la 
+lista de trabajos, o lo que es lo mismo , estas modificaciones no deberían afectar para nada 
+al programa, el cual tendría que seguir funcionado sin cambio alguno. 
+• Haz que la lista de trabajos se mant enga siempre ordenada de forma alfabética por la 
+descripción del trabajo. 
+ 

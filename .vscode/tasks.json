@@ -1,0 +1,52 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Compilar Java",
+      "type": "shell",
+      "command": "javac",
+      "args": [
+        "-encoding",
+        "windows-1252",
+        "-d",
+        "bin",
+        "@.sources.txt"
+      ],
+      "problemMatcher": [
+        "$javac"
+      ],
+      "group": "build",
+      "windows": {
+        "command": "powershell",
+        "args": [
+          "-NoProfile",
+          "-Command",
+          "(Get-ChildItem -Recurse -Path src -Filter *.java | ForEach-Object { $_.FullName }) | Set-Content .sources.txt; javac -encoding windows-1252 -d bin @.sources.txt"
+        ]
+      }
+    },
+    {
+      "label": "Ejecutar Consola",
+      "type": "shell",
+      "command": "java",
+      "args": [
+        "-cp",
+        "bin",
+        "garaje.AplicacionGestionGaraje",
+        "--consola"
+      ],
+      "dependsOn": "Compilar Java"
+    },
+    {
+      "label": "Ejecutar GUI",
+      "type": "shell",
+      "command": "java",
+      "args": [
+        "-cp",
+        "bin",
+        "garaje.AplicacionGestionGaraje"
+      ],
+      "dependsOn": "Compilar Java"
+    }
+  ]
+}

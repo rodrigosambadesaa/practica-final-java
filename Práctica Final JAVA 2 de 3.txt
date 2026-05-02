@@ -1,0 +1,79 @@
+Práctica Final JAVA 2/3 
+ 
+ 
+1/2 
+ 
+ 
+ 
+Garaje de reparación y revisión de vehículos (Parte 2) 
+ 
+Objetivos 
+• Practicar el uso de excepciones y el bloque try/catch 
+• Practicar el uso de clases y métodos abstractos. 
+• Practicar la redefinición/sobreescritura de métodos heredados de la clase Object. 
+Descripción general 
+ 
+Tomando como base la práctica anterior, añade el siguiente comportamiento: 
+• Añade la adecuada sobreescritura del método equals para poder comparar trabajos entre sí. 
+• Para cada uno de los errores indicados en la práctica inicial  y en esta, se deberá lanzar una 
+excepción, la cual deberá ser gestionada adecuadamente en un bloque try/catch 
+• El alumno deberá hacer abstractas aquellas clases de la jerarquía desarrollada en la práctica 
+inicial que considere que deben serlo. 
+• El garaje se ha marcado unos plazos máximos en los que deberían estar terminados los 
+trabajos. Estos plazos son: 21 días para las reparaciones de chapa y pintura, 14 para las 
+reparaciones mecánicas y 7 para las revisiones. La implementación de los plazos máximos 
+de terminación de trabajos deberá realizarse definiendo métodos abstractos en las 
+superclases que se implementarán en las subclases que corresponda. 
+• Se añadirán los nuevos casos de uso contemplados a continuación. 
+ 
+ 
+Casos de uso 
+Las operaciones que se desea que los mecán icos puedan realizar son las descritas en los 
+siguientes casos de uso: 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+mecánico 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+Registra trabajo 
+Aumenta horas 
+Aumenta coste piezas 
+Finaliza trabajo 
+Muestra trabajo 
+Consulta plazo 
+Muestra todos 
+
+Práctica Final JAVA 2/3 
+ 
+ 
+2/2 
+ 
+ 
+ 
+Caso de uso "Consulta plazo": 
+1. El mecánico selecciona la opción "Consulta plazo". 
+2. La aplicación permite introducir el identificador del trabajo.  
+3. El mecánico introduce el identificador. 
+4. La aplicación muestra el plazo máximo en el que debería estar finalizado el trabajo. 
+- Se notifica un error si el identificador es incorrecto. 
+Caso de uso "Muestra todos": 
+1. El mecánico selecciona la opción "Muestra todos". 
+2. La aplicación muestra los datos de todos los trabajos: para todos los trabajos se muestra: 
+identificador, descripción, tipo de trabajo, horas, precio y plazo. En el caso de las 
+reparaciones se muestra además el dinero gastado en material. La implementación de 
+este caso de uso deberá apoyarse en la redefinición del método toString en las clases 
+que componen la jerarquía de reparaciones y revisiones. 

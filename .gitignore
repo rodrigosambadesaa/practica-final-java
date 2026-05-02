@@ -1,0 +1,22 @@
+# Java build output
+bin/
+*.class
+*.jar
+
+# Temporary build file
+.sources.txt
+
+# Runtime data
+*.bin
+
+# VS Code
+.vscode/*.log
+
+# Eclipse metadata
+.classpath
+.project
+.settings/
+
+# OS files
+Thumbs.db
+.DS_Store
