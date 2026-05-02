@@ -1,20 +1,20 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "java",
-      "name": "Debug GUI",
-      "request": "launch",
-      "mainClass": "garaje.AplicacionGestionGaraje",
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "type": "java",
-      "name": "Debug Consola",
-      "request": "launch",
-      "mainClass": "garaje.AplicacionGestionGaraje",
-      "args": "--consola",
-      "cwd": "${workspaceFolder}"
-    }
-  ]
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug GUI",
+            "request": "launch",
+            "mainClass": "garaje.AplicacionGestionGaraje",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "java",
+            "name": "Debug Consola",
+            "request": "launch",
+            "mainClass": "garaje.AplicacionGestionGaraje",
+            "args": "--consola",
+            "cwd": "${workspaceFolder}"
+        }
+    ]
 }
