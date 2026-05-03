@@ -2,15 +2,24 @@
 bin/
 *.class
 *.jar
+backend/target/
+.tools/
 
 # Temporary build file
 .sources.txt
 
 # Runtime data
 *.bin
+data/
+backend/data/
 
 # VS Code
 .vscode/*.log
+
+# Angular
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
 
 # Eclipse metadata
 .classpath
