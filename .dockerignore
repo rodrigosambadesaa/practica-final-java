@@ -1,0 +1,10 @@
+.git
+.tools
+.vscode
+backend
+frontend
+bin
+build
+*.bin
+*.pdf
+*.log

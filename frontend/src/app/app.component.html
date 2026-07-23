@@ -1,0 +1,171 @@
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Inicio de Garaje Pro">
+    <span class="brand-mark">GP</span>
+    <span>Garaje Pro</span>
+  </a>
+  <span class="connection"><i></i> Sistema operativo</span>
+</header>
+
+<main class="layout">
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Gestión de taller</p>
+      <h1>Trabajos bajo control.</h1>
+      <p class="hero-copy">Crea, presupuesta y completa cada intervención desde un único panel.</p>
+    </div>
+    <div class="stats" aria-label="Resumen">
+      <div><strong>{{ trabajos().length }}</strong><span>Trabajos</span></div>
+      <div><strong>{{ trabajos().length - trabajosFinalizados }}</strong><span>Activos</span></div>
+      <div><strong>{{ trabajosFinalizados }}</strong><span>Finalizados</span></div>
+    </div>
+  </section>
+
+  @if (mensaje() || error()) {
+    <div class="notice" [class.notice-error]="error()" role="status">
+      {{ error() || mensaje() }}
+    </div>
+  }
+
+  <section class="workspace">
+    <div class="card create-card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Alta</p>
+          <h2>Nuevo trabajo</h2>
+        </div>
+        <span class="step">01</span>
+      </div>
+      <form (ngSubmit)="crearTrabajo()" class="form-grid">
+        <label>
+          Tipo de intervención
+          <select name="tipo" [(ngModel)]="tipo">
+            <option value="REPARACION_MECANICA">Reparación mecánica</option>
+            <option value="REPARACION_CHAPA_PINTURA">Chapa y pintura</option>
+            <option value="REVISION">Revisión</option>
+          </select>
+        </label>
+        <label>
+          Descripción
+          <input name="descripcion" [(ngModel)]="descripcion" maxlength="300"
+            placeholder="Ej. Cambio de embrague" autocomplete="off" />
+        </label>
+        <button class="primary" type="submit" [disabled]="!descripcion.trim()">Crear trabajo</button>
+      </form>
+    </div>
+
+    <div class="card operations-card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Actualización</p>
+          <h2>Operaciones</h2>
+        </div>
+        <span class="step">02</span>
+      </div>
+
+      <label>
+        Trabajo seleccionado
+        <select [(ngModel)]="trabajoSeleccionadoId" (ngModelChange)="ajustarMaterialAlTrabajo()">
+          <option [ngValue]="null">Selecciona un trabajo</option>
+          @for (trabajo of trabajos(); track trabajo.id) {
+            <option [ngValue]="trabajo.id">#{{ trabajo.id }} · {{ trabajo.descripcion }}</option>
+          }
+        </select>
+      </label>
+
+      <div class="operation-row">
+        <label>
+          Horas
+          <input type="number" min="0.1" step="0.5" [(ngModel)]="horas" />
+        </label>
+        <button type="button" (click)="aumentarHoras()"
+          [disabled]="!trabajoSeleccionado || trabajoSeleccionado.finalizado || horas <= 0">
+          Añadir horas
+        </button>
+      </div>
+
+      <div class="operation-row material-row">
+        <label>
+          Material
+          <select [(ngModel)]="tipoMaterial" [disabled]="!puedeAnadirMaterial">
+            <option value="piezas">Piezas</option>
+            @if (trabajoSeleccionado?.tipo === 'REPARACION_CHAPA_PINTURA') {
+              <option value="chapa">Chapa</option>
+              <option value="pintura">Pintura</option>
+            }
+          </select>
+        </label>
+        <label>
+          Coste
+          <div class="input-suffix">
+            <input type="number" min="0.01" step="1" [(ngModel)]="coste" [disabled]="!puedeAnadirMaterial" />
+            <span>€</span>
+          </div>
+        </label>
+        <button type="button" (click)="aumentarMaterial()" [disabled]="!puedeAnadirMaterial || coste <= 0">
+          Añadir material
+        </button>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="success" (click)="finalizarTrabajo()"
+          [disabled]="!trabajoSeleccionado || trabajoSeleccionado.finalizado">Finalizar</button>
+        <button type="button" class="danger ghost" (click)="eliminarTrabajo()"
+          [disabled]="!trabajoSeleccionado">Eliminar</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card list-card">
+    <div class="section-heading list-heading">
+      <div>
+        <p class="eyebrow">Actividad</p>
+        <h2>Trabajos del garaje</h2>
+      </div>
+      <div class="database-actions">
+        <button type="button" class="ghost" (click)="seedDb()">Cargar ejemplos</button>
+        <button type="button" class="ghost" (click)="recargar()">Actualizar</button>
+        <button type="button" class="danger ghost" (click)="resetDb()">Vaciar</button>
+      </div>
+    </div>
+
+    @if (cargando()) {
+      <div class="empty-state">Cargando trabajos…</div>
+    } @else if (trabajos().length === 0) {
+      <div class="empty-state">
+        <strong>Aún no hay trabajos</strong>
+        <span>Crea el primero o carga los datos de ejemplo.</span>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Trabajo</th>
+              <th>Tipo</th>
+              <th>Horas</th>
+              <th>Plazo</th>
+              <th>Precio</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (trabajo of trabajos(); track trabajo.id) {
+              <tr [class.is-finished]="trabajo.finalizado">
+                <td><span class="job-id">#{{ trabajo.id }}</span>{{ trabajo.descripcion }}</td>
+                <td>{{ etiquetaTipo(trabajo.tipo) }}</td>
+                <td>{{ trabajo.horas }}</td>
+                <td>{{ trabajo.plazoDias }} días</td>
+                <td class="price">{{ trabajo.precio | currency:'EUR' }}</td>
+                <td>
+                  <span class="status" [class.status-done]="trabajo.finalizado">
+                    {{ trabajo.finalizado ? 'Finalizado' : 'En curso' }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</main>

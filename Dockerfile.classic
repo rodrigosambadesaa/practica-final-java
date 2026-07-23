@@ -1,0 +1,16 @@
+FROM eclipse-temurin:21-jdk-alpine AS build
+WORKDIR /workspace
+
+COPY src ./src
+COPY classic-tests ./classic-tests
+
+RUN find src classic-tests -name "*.java" -print > sources.txt \
+    && javac -encoding UTF-8 -d classes @sources.txt \
+    && java -ea -cp classes garaje.ModeloGarajeTest
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /data
+
+COPY --from=build /workspace/classes /app/classes
+
+ENTRYPOINT ["java", "-cp", "/app/classes", "garaje.AplicacionGestionGaraje", "--consola"]

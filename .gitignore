@@ -1,5 +1,6 @@
 # Java build output
 bin/
+build/
 *.class
 *.jar
 backend/target/
@@ -20,6 +21,9 @@ backend/data/
 frontend/node_modules/
 frontend/dist/
 frontend/.angular/
+
+# Docker
+.env
 
 # Eclipse metadata
 .classpath
