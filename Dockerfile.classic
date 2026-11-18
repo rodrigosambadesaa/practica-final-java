@@ -1,4 +1,6 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
+# CVE-2026-114938: mitigate in build and runtime JVMs.
+ENV JAVA_TOOL_OPTIONS="-XX:-UseBASE64Intrinsics"
 WORKDIR /workspace
 
 COPY src ./src
@@ -9,6 +11,7 @@ RUN find src classic-tests -name "*.java" -print > sources.txt \
     && java -ea -cp classes garaje.ModeloGarajeTest
 
 FROM eclipse-temurin:21-jre-alpine
+ENV JAVA_TOOL_OPTIONS="-XX:-UseBASE64Intrinsics"
 WORKDIR /data
 
 COPY --from=build /workspace/classes /app/classes
