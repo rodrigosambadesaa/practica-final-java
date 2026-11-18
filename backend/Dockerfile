@@ -1,4 +1,6 @@
 FROM maven:3.9.11-eclipse-temurin-21-alpine AS build
+# CVE-2026-114938: disable vulnerable Base64 intrinsic until patched JDK images are confirmed.
+ENV JAVA_TOOL_OPTIONS="-XX:-UseBASE64Intrinsics"
 WORKDIR /workspace
 
 COPY pom.xml .
@@ -8,6 +10,7 @@ COPY src ./src
 RUN mvn -B clean package
 
 FROM eclipse-temurin:21-jre-alpine
+ENV JAVA_TOOL_OPTIONS="-XX:-UseBASE64Intrinsics"
 RUN addgroup -S garaje && adduser -S garaje -G garaje
 WORKDIR /app
 
