@@ -1,0 +1,37 @@
+name: Java4Shell Docker regression checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-java4shell:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Compose
+        run: docker compose config --quiet
+
+      - name: Build Java 21 containers with refreshed base images
+        run: |
+          docker build --pull -t garaje-backend-java4shell ./backend
+          docker build --pull -f Dockerfile.classic -t garaje-classic-java4shell .
+
+      - name: Assert Base64 intrinsic is disabled in both runtime images
+        shell: bash
+        run: |
+          set -euo pipefail
+          for image in garaje-backend-java4shell garaje-classic-java4shell; do
+            echo "Checking Java4Shell mitigation in ${image}"
+            docker run --rm --entrypoint java "${image}" -XX:+PrintFlagsFinal -version 2>&1 \
+              | tee /tmp/java4shell-jvm-flags.txt \
+              | grep -E 'UseBASE64Intrinsics[[:space:]]+=[[:space:]]+false'
+          done
