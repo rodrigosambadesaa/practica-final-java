@@ -20,6 +20,7 @@ public final class ModeloGarajeRegresionTest {
     identificadoresSonUnicosEInmutables();
     seConservaElOrdenPorDescripcion();
     contadorSeRecuperaDesdeElGaraje();
+    csvConservaComillasYNeutralizaFormulas();
     System.out.println("Pruebas adicionales del modelo clasico: OK");
   }
 
@@ -121,6 +122,16 @@ public final class ModeloGarajeRegresionTest {
     Contador recuperado = GestorPersistenciaGaraje.reconciliarContador(garaje, new Contador());
     if (recuperado.siguiente() != 41L) {
       throw new AssertionError("El contador no debe reutilizar un ID ya persistido");
+    }
+  }
+
+  private static void csvConservaComillasYNeutralizaFormulas() {
+    if (!"\"Cambio de \"\"pieza\"\"\"".equals(
+        AplicacionGestionGarajeGUI.escaparCsv("Cambio de \"pieza\""))) {
+      throw new AssertionError("Las comillas del CSV deben conservarse");
+    }
+    if (!"\"'=1+1\"".equals(AplicacionGestionGarajeGUI.escaparCsv("=1+1"))) {
+      throw new AssertionError("El CSV debe neutralizar formulas");
     }
   }
 
