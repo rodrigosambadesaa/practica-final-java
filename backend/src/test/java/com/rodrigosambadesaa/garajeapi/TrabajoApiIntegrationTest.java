@@ -141,4 +141,78 @@ class TrabajoApiIntegrationTest {
 
     assertThat(repository.findByEliminadoFalseOrderByDescripcionAsc()).hasSize(3);
   }
+
+  @Test
+  void aceptaCeroYRechazaNegativosYExcesoDePrecision() throws Exception {
+    mockMvc.perform(post("/api/trabajos")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"tipo\":\"REPARACION_CHAPA_PINTURA\",\"descripcion\":\"Aleta\"}"))
+        .andExpect(status().isCreated());
+    Long id = repository.findByEliminadoFalseOrderByDescripcionAsc().getFirst().getId();
+
+    mockMvc.perform(patch("/api/trabajos/{id}/horas", id)
+        .contentType(MediaType.APPLICATION_JSON).content("{\"horas\":0}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.horas").value(0));
+    mockMvc.perform(patch("/api/trabajos/{id}/material", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"tipoMaterial\":\"chapa\",\"coste\":0}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.costeChapa").value(0));
+    mockMvc.perform(patch("/api/trabajos/{id}/horas", id)
+        .contentType(MediaType.APPLICATION_JSON).content("{\"horas\":-1}"))
+        .andExpect(status().isBadRequest());
+    mockMvc.perform(patch("/api/trabajos/{id}/material", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"tipoMaterial\":\"pintura\",\"coste\":-0.01}"))
+        .andExpect(status().isBadRequest());
+    mockMvc.perform(patch("/api/trabajos/{id}/material", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"tipoMaterial\":\"pintura\",\"coste\":0.001}"))
+        .andExpect(status().isBadRequest());
+    mockMvc.perform(patch("/api/trabajos/{id}/horas", id)
+        .contentType(MediaType.APPLICATION_JSON).content("{\"horas\":10000000000}"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void bloqueaDesbordamientoAcumuladoYOrdenaSinDistinguirMayusculas() throws Exception {
+    var zeta = new com.rodrigosambadesaa.garajeapi.domain.Trabajo();
+    zeta.setTipo(com.rodrigosambadesaa.garajeapi.domain.TrabajoTipo.REVISION);
+    zeta.setDescripcion("zeta");
+    zeta.setHoras(new java.math.BigDecimal("9999999999.99"));
+    repository.saveAndFlush(zeta);
+
+    var alfa = new com.rodrigosambadesaa.garajeapi.domain.Trabajo();
+    alfa.setTipo(com.rodrigosambadesaa.garajeapi.domain.TrabajoTipo.REVISION);
+    alfa.setDescripcion("Alfa");
+    repository.saveAndFlush(alfa);
+
+    mockMvc.perform(get("/api/trabajos"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].descripcion").value("Alfa"))
+        .andExpect(jsonPath("$[1].descripcion").value("zeta"));
+
+    mockMvc.perform(patch("/api/trabajos/{id}/horas", zeta.getId())
+        .contentType(MediaType.APPLICATION_JSON).content("{\"horas\":0.01}"))
+        .andExpect(status().isBadRequest());
+    assertThat(repository.findById(zeta.getId()).orElseThrow().getHoras())
+        .isEqualByComparingTo("9999999999.99");
+  }
+
+  @Test
+  void losTrabajosFinalizadosNoAceptanCambiosEnMaterial() throws Exception {
+    mockMvc.perform(post("/api/trabajos")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"tipo\":\"REPARACION_MECANICA\",\"descripcion\":\"Correa\"}"))
+        .andExpect(status().isCreated());
+    Long id = repository.findByEliminadoFalseOrderByDescripcionAsc().getFirst().getId();
+    mockMvc.perform(patch("/api/trabajos/{id}/finalizar", id))
+        .andExpect(status().isOk());
+    mockMvc.perform(patch("/api/trabajos/{id}/material", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"tipoMaterial\":\"piezas\",\"coste\":10}"))
+        .andExpect(status().isBadRequest());
+  }
+
 }
