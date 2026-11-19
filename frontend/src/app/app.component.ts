@@ -83,6 +83,10 @@ export class AppComponent implements OnInit {
       this.error.set('Selecciona un trabajo');
       return;
     }
+    if (this.trabajoSeleccionado?.finalizado || !this.esDecimalPermitido(this.horas)) {
+      this.error.set('Introduce horas no negativas con hasta dos decimales en un trabajo activo');
+      return;
+    }
 
     this.api.aumentarHoras(this.trabajoSeleccionadoId, this.horas).subscribe({
       next: () => {
@@ -96,6 +100,11 @@ export class AppComponent implements OnInit {
   aumentarMaterial(): void {
     if (this.trabajoSeleccionadoId === null) {
       this.error.set('Selecciona un trabajo');
+      return;
+    }
+    if (!this.puedeAnadirMaterial || !this.esDecimalPermitido(this.coste)
+      || (this.trabajoSeleccionado?.tipo === 'REPARACION_MECANICA' && this.tipoMaterial !== 'piezas')) {
+      this.error.set('Material no permitido o importe no valido (maximo dos decimales)');
       return;
     }
 
@@ -171,6 +180,11 @@ export class AppComponent implements OnInit {
       REVISION: 'Revisión'
     };
     return etiquetas[tipo];
+  }
+
+  private esDecimalPermitido(valor: number): boolean {
+    return Number.isFinite(valor) && valor >= 0 && valor <= 9_999_999_999.99
+      && Number(valor.toFixed(2)) === valor;
   }
 
   private extraerError(err: unknown): string {

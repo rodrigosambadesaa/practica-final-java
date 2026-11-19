@@ -22,7 +22,7 @@ public abstract class Reparacion extends Trabajo {
   public void acumulaPrecioPiezasUtilizadas(BigDecimal importe)
       throws ExcepcionValorNoValido, ExcepcionTrabajoFinalizado, ExcepcionTrabajoEliminado {
     validarTrabajoEditable();
-    validarImportePositivo(importe, "El precio del material debe ser positivo");
+    validarImporteNoNegativo(importe, "El precio del material no puede ser negativo");
     precioPiezasUtilizadas = getPrecioPiezasUtilizadas().add(importe);
   }
 

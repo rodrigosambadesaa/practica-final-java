@@ -6,7 +6,9 @@ import java.awt.FlowLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -52,7 +54,8 @@ public class AplicacionGestionGarajeGUI extends JFrame {
     public AplicacionGestionGarajeGUI() {
         super("Gestion de Garaje - GUI");
         this.garaje = GestorPersistenciaGaraje.cargarGaraje();
-        this.contador = GestorPersistenciaGaraje.cargarContador();
+        this.contador = GestorPersistenciaGaraje.reconciliarContador(garaje,
+                GestorPersistenciaGaraje.cargarContador());
         this.modeloLista = new DefaultListModel<String>();
         this.listaTrabajos = new JList<String>(modeloLista);
         this.campoFiltro = new JTextField(24);
@@ -386,17 +389,25 @@ public class AplicacionGestionGarajeGUI extends JFrame {
 
     private void exportarCsv(File fichero) throws IOException {
         List<Trabajo> trabajos = garaje.getTrabajos();
-        try (FileWriter escritor = new FileWriter(fichero, false)) {
+        try (Writer escritor = Files.newBufferedWriter(fichero.toPath(), StandardCharsets.UTF_8)) {
             escritor.write("id,tipo,descripcion,horas,plazo_dias,finalizado,eliminado,precio\n");
             for (Trabajo trabajo : trabajos) {
-                String descripcion = trabajo.getDescripcion() == null ? "" : trabajo.getDescripcion().toString();
-                descripcion = descripcion.replace('"', '\'');
-                escritor.write(trabajo.getId() + "," + trabajo.getClass().getSimpleName() + ",\""
-                        + descripcion + "\"," + trabajo.getHorasNecesariasRealizacion() + "," + trabajo.plazoMaximo()
-                        + "," + trabajo.getFinalizado() + "," + trabajo.getEliminado() + "," + trabajo.precioACobrar()
-                        + "\n");
+                escritor.write(trabajo.getId() + "," + trabajo.getClass().getSimpleName() + ","
+                        + escaparCsv(trabajo.getDescripcion()) + ","
+                        + trabajo.getHorasNecesariasRealizacion() + "," + trabajo.plazoMaximo()
+                        + "," + trabajo.getFinalizado() + "," + trabajo.getEliminado() + ","
+                        + trabajo.precioACobrar() + "\n");
             }
         }
+    }
+
+    /** CSV compatible con RFC 4180 y protegido frente a inyeccion de formulas. */
+    static String escaparCsv(String texto) {
+        String seguro = java.util.Objects.requireNonNull(texto, "El texto no puede ser nulo");
+        if (!seguro.isEmpty() && "=+-@\t\r".indexOf(seguro.charAt(0)) >= 0) {
+            seguro = "'" + seguro;
+        }
+        return "\"" + seguro.replace("\"", "\"\"") + "\"";
     }
 
     private void guardarDatos() {

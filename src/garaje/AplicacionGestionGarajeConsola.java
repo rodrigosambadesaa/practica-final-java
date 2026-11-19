@@ -19,10 +19,11 @@ public final class AplicacionGestionGarajeConsola {
   }
 
   public static void iniciar() {
+    Garaje garaje = GestorPersistenciaGaraje.cargarGaraje();
     AplicacionGestionGarajeConsola aplicacion = new AplicacionGestionGarajeConsola(
         new Scanner(System.in),
-        GestorPersistenciaGaraje.cargarGaraje(),
-        GestorPersistenciaGaraje.cargarContador());
+        garaje,
+        GestorPersistenciaGaraje.reconciliarContador(garaje, GestorPersistenciaGaraje.cargarContador()));
     aplicacion.ejecutar();
   }
 
@@ -34,6 +35,9 @@ public final class AplicacionGestionGarajeConsola {
       mostrarMenu();
       try {
         continuar = procesarOpcion(leerEntero("Opcion: "));
+      } catch (java.util.NoSuchElementException finDeEntrada) {
+        System.out.println("Fin de entrada: guardando antes de salir.");
+        continuar = false;
       } catch (Exception excepcion) {
         System.out.println("Error: " + excepcion.getMessage());
       }
@@ -51,6 +55,8 @@ public final class AplicacionGestionGarajeConsola {
         5. Mostrar trabajos
         6. Eliminar trabajo
         7. Guardar y salir
+        8. Mostrar un trabajo
+        9. Consultar plazo
         """);
   }
 
@@ -81,6 +87,15 @@ public final class AplicacionGestionGarajeConsola {
         yield true;
       }
       case 7 -> false;
+      case 8 -> {
+        System.out.println(obtenerTrabajo());
+        yield true;
+      }
+      case 9 -> {
+        Trabajo trabajo = obtenerTrabajo();
+        System.out.println("Plazo maximo: " + trabajo.plazoMaximo() + " dias");
+        yield true;
+      }
       default -> throw new IllegalArgumentException("Opcion no valida");
     };
   }

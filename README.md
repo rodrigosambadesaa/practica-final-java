@@ -144,3 +144,25 @@ Los errores de validación y de negocio se devuelven como respuestas Problem Det
 El cambio del formato serializado del modelo clásico puede hacer incompatibles ficheros `.bin`
 antiguos. Si ocurre, la aplicación inicia un almacén vacío; conserva una copia externa si necesitas
 migrar datos históricos.
+
+## Integridad del modelo y verificaciones automáticas
+
+- La identidad de cada trabajo es su ID único, independientemente del subtipo.
+- Los IDs ya asignados no se pueden reasignar; se rechazan duplicados y la lista se
+  consulta siempre ordenada por descripción, sin distinguir mayúsculas/minúsculas.
+- Las horas y los importes no admiten valores negativos; **cero es válido** de
+  acuerdo con el enunciado. Los trabajos finalizados no pueden reabrirse ni
+  modificar sus horas o material, tampoco mediante los setters públicos.
+- Al arrancar, la aplicación clásica sincroniza el contador con el máximo ID
+  persistido, incluso si se perdió `contador.bin`.
+- La consola también permite consultar un trabajo concreto (opción 8) y su plazo
+  máximo (opción 9); la opción 7 sigue guardando y saliendo.
+- `.github/workflows/full-tests.yml` comprueba modelo clásico, API Java,
+  frontend Angular y la configuración/arranque de Docker. La comprobación de
+  Java4Shell permanece en su workflow independiente.
+
+Los incrementos de la API se validan tanto en los DTO como en el servicio: se aceptan
+cero y hasta dos decimales, se rechazan cantidades negativas y se comprueba que el
+acumulado no desborde las columnas `DECIMAL(12,2)`. Las modificaciones concurrentes
+bloquean la fila mientras se aplica cada incremento; el listado web se ordena sin
+distinguir mayúsculas/minúsculas.
