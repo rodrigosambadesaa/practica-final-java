@@ -75,10 +75,10 @@
       <div class="operation-row">
         <label>
           Horas
-          <input type="number" min="0.1" step="0.5" [(ngModel)]="horas" />
+          <input type="number" min="0" step="0.01" [(ngModel)]="horas" />
         </label>
         <button type="button" (click)="aumentarHoras()"
-          [disabled]="!trabajoSeleccionado || trabajoSeleccionado.finalizado || horas <= 0">
+          [disabled]="!trabajoSeleccionado || trabajoSeleccionado.finalizado || horas < 0">
           Añadir horas
         </button>
       </div>
@@ -97,11 +97,11 @@
         <label>
           Coste
           <div class="input-suffix">
-            <input type="number" min="0.01" step="1" [(ngModel)]="coste" [disabled]="!puedeAnadirMaterial" />
+            <input type="number" min="0" step="0.01" [(ngModel)]="coste" [disabled]="!puedeAnadirMaterial" />
             <span>€</span>
           </div>
         </label>
-        <button type="button" (click)="aumentarMaterial()" [disabled]="!puedeAnadirMaterial || coste <= 0">
+        <button type="button" (click)="aumentarMaterial()" [disabled]="!puedeAnadirMaterial || coste < 0">
           Añadir material
         </button>
       </div>

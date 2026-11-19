@@ -83,6 +83,11 @@ export class AppComponent implements OnInit {
       this.error.set('Selecciona un trabajo');
       return;
     }
+    if (this.trabajoSeleccionado?.finalizado || !Number.isFinite(this.horas)
+      || this.horas < 0 || !Number.isInteger(this.horas * 100)) {
+      this.error.set('Introduce horas no negativas con hasta dos decimales en un trabajo activo');
+      return;
+    }
 
     this.api.aumentarHoras(this.trabajoSeleccionadoId, this.horas).subscribe({
       next: () => {
@@ -96,6 +101,12 @@ export class AppComponent implements OnInit {
   aumentarMaterial(): void {
     if (this.trabajoSeleccionadoId === null) {
       this.error.set('Selecciona un trabajo');
+      return;
+    }
+    if (!this.puedeAnadirMaterial || !Number.isFinite(this.coste) || this.coste < 0
+      || !Number.isInteger(this.coste * 100)
+      || (this.trabajoSeleccionado?.tipo === 'REPARACION_MECANICA' && this.tipoMaterial !== 'piezas')) {
+      this.error.set('Material no permitido o importe no valido (maximo dos decimales)');
       return;
     }
 

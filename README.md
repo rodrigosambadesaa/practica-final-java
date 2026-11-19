@@ -160,3 +160,9 @@ migrar datos históricos.
 - `.github/workflows/full-tests.yml` comprueba modelo clásico, API Java,
   frontend Angular y la configuración/arranque de Docker. La comprobación de
   Java4Shell permanece en su workflow independiente.
+
+Los incrementos de la API se validan tanto en los DTO como en el servicio: se aceptan
+cero y hasta dos decimales, se rechazan cantidades negativas y se comprueba que el
+acumulado no desborde las columnas `DECIMAL(12,2)`. Las modificaciones concurrentes
+bloquean la fila mientras se aplica cada incremento; el listado web se ordena sin
+distinguir mayúsculas/minúsculas.
