@@ -309,6 +309,16 @@ button.danger {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
+  align-items: end;
+}
+
+.database-actions .admin-secret {
+  width: min(100%, 190px);
+}
+
+.database-actions .admin-secret input {
+  min-height: 36px;
+  font-size: 0.78rem;
 }
 
 .database-actions button {

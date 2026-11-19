@@ -166,3 +166,26 @@ cero y hasta dos decimales, se rechazan cantidades negativas y se comprueba que 
 acumulado no desborde las columnas `DECIMAL(12,2)`. Las modificaciones concurrentes
 bloquean la fila mientras se aplica cada incremento; el listado web se ordena sin
 distinguir mayúsculas/minúsculas.
+
+## Operaciones administrativas y seguridad
+
+Las rutas `POST /api/db/reset` y `POST /api/db/seed` requieren una clave
+administrativa mediante la cabecera `X-Admin-Token`. **Si la clave no esta
+configurada, ambas operaciones se rechazan**. Para habilitarlas en Docker:
+
+1. Copia `.env.example` a `.env` si aun no existe.
+2. Genera una clave aleatoria de al menos 32 caracteres con `openssl rand -hex 32`
+   y asignala a `APP_ADMIN_TOKEN` en tu `.env` privado.
+3. Inicia de nuevo el backend mediante `docker compose up -d --build`.
+4. Introduce temporalmente esa clave en el campo **Clave administrativa** de la
+   interfaz web antes de pulsar **Cargar ejemplos** o **Vaciar**.
+
+La clave no va incluida en el frontend, ni se guarda en el almacenamiento del
+navegador. Las comprobaciones se realizan en el backend. No la incluyas en
+capturas, repositorios, URLs ni registros; usa HTTPS fuera de localhost.
+La consola web H2 esta desactivada por defecto, pero puede habilitarse
+explicitamente en desarrollo local con `H2_CONSOLE_ENABLED=true` (sin perfil MySQL).
+
+**Importante:** esta clave protege exclusivamente los dos endpoints administrativos.
+El resto de operaciones de gestion de trabajos sigue sin autenticacion; no publiques
+la API para usuarios no confiables sin incorporar autenticacion/autorizacion general.

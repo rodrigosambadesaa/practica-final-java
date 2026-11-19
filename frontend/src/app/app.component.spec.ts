@@ -101,4 +101,18 @@ describe('AppComponent', () => {
     expect(api.aumentarMaterial).not.toHaveBeenCalled();
   });
 
+  it('exige clave antes de lanzar operaciones administrativas y no la persiste', () => {
+    const component = TestBed.createComponent(AppComponent).componentInstance;
+    component.resetDb();
+    component.seedDb();
+    expect(api.resetDb).not.toHaveBeenCalled();
+    expect(api.seedDb).not.toHaveBeenCalled();
+
+    component.adminToken = 'clave-temporal';
+    component.seedDb();
+    component.resetDb();
+    expect(api.seedDb).toHaveBeenCalledWith('clave-temporal');
+    expect(api.resetDb).toHaveBeenCalledWith('clave-temporal');
+  });
+
 });
