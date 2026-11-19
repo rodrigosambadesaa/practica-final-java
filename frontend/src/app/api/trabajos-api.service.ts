@@ -33,11 +33,13 @@ export class TrabajosApiService {
         return this.http.delete<void>(`${this.apiBase}/trabajos/${id}`);
     }
 
-    resetDb(): Observable<string> {
-        return this.http.post(`${this.apiBase}/db/reset`, {}, { responseType: 'text' });
+    resetDb(adminToken: string): Observable<string> {
+        return this.http.post(`${this.apiBase}/db/reset`, {},
+            { headers: { 'X-Admin-Token': adminToken }, responseType: 'text' });
     }
 
-    seedDb(): Observable<string> {
-        return this.http.post(`${this.apiBase}/db/seed`, {}, { responseType: 'text' });
+    seedDb(adminToken: string): Observable<string> {
+        return this.http.post(`${this.apiBase}/db/seed`, {},
+            { headers: { 'X-Admin-Token': adminToken }, responseType: 'text' });
     }
 }

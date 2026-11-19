@@ -33,4 +33,20 @@ describe('TrabajosApiService', () => {
     expect(request.request.body).toEqual({ tipo: 'REVISION', descripcion: 'Pre-ITV' });
     request.flush({});
   });
+  it('envía la clave administrativa solo mediante cabecera en reset y seed', () => {
+    const token = 'test-only-admin-token';
+    service.resetDb(token).subscribe();
+    const reset = http.expectOne('/api/db/reset');
+    expect(reset.request.method).toBe('POST');
+    expect(reset.request.headers.get('X-Admin-Token')).toBe(token);
+    expect(reset.request.body).toEqual({});
+    reset.flush('BBDD reseteada');
+
+    service.seedDb(token).subscribe();
+    const seed = http.expectOne('/api/db/seed');
+    expect(seed.request.method).toBe('POST');
+    expect(seed.request.headers.get('X-Admin-Token')).toBe(token);
+    seed.flush('Datos de ejemplo cargados');
+  });
+
 });

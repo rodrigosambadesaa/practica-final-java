@@ -25,6 +25,8 @@ export class AppComponent implements OnInit {
   coste = 10;
   tipoMaterial: TipoMaterial = 'piezas';
   trabajoSeleccionadoId: number | null = null;
+  /** Clave administrativa solo en memoria, nunca en localStorage ni en el codigo compilado. */
+  adminToken = '';
 
   constructor(private readonly api: TrabajosApiService) {}
 
@@ -148,7 +150,11 @@ export class AppComponent implements OnInit {
   }
 
   resetDb(): void {
-    this.api.resetDb().subscribe({
+    if (!this.adminToken) {
+      this.error.set('Introduce la clave administrativa');
+      return;
+    }
+    this.api.resetDb(this.adminToken).subscribe({
       next: () => {
         this.mensaje.set('BBDD reseteada');
         this.recargar();
@@ -158,7 +164,11 @@ export class AppComponent implements OnInit {
   }
 
   seedDb(): void {
-    this.api.seedDb().subscribe({
+    if (!this.adminToken) {
+      this.error.set('Introduce la clave administrativa');
+      return;
+    }
+    this.api.seedDb(this.adminToken).subscribe({
       next: () => {
         this.mensaje.set('Datos de ejemplo cargados');
         this.recargar();

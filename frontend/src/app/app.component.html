@@ -122,9 +122,14 @@
         <h2>Trabajos del garaje</h2>
       </div>
       <div class="database-actions">
-        <button type="button" class="ghost" (click)="seedDb()">Cargar ejemplos</button>
+        <label class="admin-secret">
+          Clave administrativa
+          <input type="password" name="adminToken" [(ngModel)]="adminToken"
+            autocomplete="off" placeholder="Solo para cargar y vaciar" />
+        </label>
+        <button type="button" class="ghost" (click)="seedDb()" [disabled]="!adminToken">Cargar ejemplos</button>
         <button type="button" class="ghost" (click)="recargar()">Actualizar</button>
-        <button type="button" class="danger ghost" (click)="resetDb()">Vaciar</button>
+        <button type="button" class="danger ghost" (click)="resetDb()" [disabled]="!adminToken">Vaciar</button>
       </div>
     </div>
 
