@@ -35,6 +35,9 @@ public final class AplicacionGestionGarajeConsola {
       mostrarMenu();
       try {
         continuar = procesarOpcion(leerEntero("Opcion: "));
+      } catch (java.util.NoSuchElementException finDeEntrada) {
+        System.out.println("Fin de entrada: guardando antes de salir.");
+        continuar = false;
       } catch (Exception excepcion) {
         System.out.println("Error: " + excepcion.getMessage());
       }

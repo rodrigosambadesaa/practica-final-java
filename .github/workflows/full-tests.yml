@@ -36,6 +36,12 @@ jobs:
           printf '7\n' | java -cp /tmp/garaje-classes garaje.AplicacionGestionGaraje --consola
           test -s garaje.bin
           test -s contador.bin
+      - name: Smoke test noninteractive EOF does not loop forever
+        run: |
+          cd "$(mktemp -d)"
+          timeout 10s java -cp /tmp/garaje-classes garaje.AplicacionGestionGaraje --consola < /dev/null
+          test -s garaje.bin
+          test -s contador.bin
 
   backend:
     name: Spring Boot API tests
