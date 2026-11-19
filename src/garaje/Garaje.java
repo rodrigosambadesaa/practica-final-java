@@ -57,7 +57,14 @@ public class Garaje implements Serializable {
   }
 
   public void registrarTrabajo(Trabajo trabajo) {
-    trabajos.add(Objects.requireNonNull(trabajo, "El trabajo no puede ser nulo"));
+    Objects.requireNonNull(trabajo, "El trabajo no puede ser nulo");
+    if (trabajo.getId() < 0) {
+      throw new IllegalArgumentException("El trabajo debe tener un identificador asignado");
+    }
+    if (existeTrabajo(trabajo.getId())) {
+      throw new IllegalArgumentException("Ya existe un trabajo con ID: " + trabajo.getId());
+    }
+    trabajos.add(trabajo);
     trabajos.sort(new ComparadorDescripcion());
   }
 
@@ -66,11 +73,22 @@ public class Garaje implements Serializable {
   }
 
   public List<Trabajo> getTrabajos() {
-    return List.copyOf(trabajos);
+    List<Trabajo> ordenados = new ArrayList<>(trabajos);
+    ordenados.sort(new ComparadorDescripcion());
+    return List.copyOf(ordenados);
   }
 
   public void setTrabajos(List<Trabajo> trabajos) {
-    this.trabajos = new ArrayList<>(Objects.requireNonNullElse(trabajos, List.of()));
+    List<Trabajo> copia = new ArrayList<>(Objects.requireNonNullElse(trabajos, List.of()));
+    java.util.Set<Long> identificadores = new java.util.HashSet<>();
+    for (Trabajo trabajo : copia) {
+      Objects.requireNonNull(trabajo, "La lista no puede contener trabajos nulos");
+      if (trabajo.getId() < 0 || !identificadores.add(trabajo.getId())) {
+        throw new IllegalArgumentException("Los identificadores deben estar asignados y ser unicos");
+      }
+    }
+    copia.sort(new ComparadorDescripcion());
+    this.trabajos = copia;
   }
 
   public List<Empleado> getEmpleados() {
@@ -142,7 +160,7 @@ public class Garaje implements Serializable {
       return "TRABAJOS\n(No hay trabajos registrados)";
     }
     StringBuilder resultado = new StringBuilder("TRABAJOS");
-    trabajos.forEach(trabajo -> resultado.append("\n--------------------\n").append(trabajo));
+    getTrabajos().forEach(trabajo -> resultado.append("\n--------------------\n").append(trabajo));
     return resultado.toString();
   }
 }

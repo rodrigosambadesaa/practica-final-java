@@ -50,7 +50,7 @@ public abstract class Trabajo implements Serializable {
     }
   }
 
-  private static void validarImporteNoNegativo(BigDecimal valor, String mensaje)
+  protected static void validarImporteNoNegativo(BigDecimal valor, String mensaje)
       throws ExcepcionValorNoValido {
     if (valor == null || valor.signum() < 0) {
       throw new ExcepcionValorNoValido(mensaje);
@@ -64,6 +64,9 @@ public abstract class Trabajo implements Serializable {
   public void setId(long id) throws ExcepcionValorNoValido {
     if (id < 0) {
       throw new ExcepcionValorNoValido("El ID no puede ser negativo");
+    }
+    if (this.id >= 0 && this.id != id) {
+      throw new ExcepcionValorNoValido("No se puede cambiar el identificador de un trabajo registrado");
     }
     this.id = id;
   }
@@ -84,7 +87,9 @@ public abstract class Trabajo implements Serializable {
     return horasNecesariasRealizacion;
   }
 
-  public void setHorasNecesariasRealizacion(BigDecimal horas) throws ExcepcionValorNoValido {
+  public void setHorasNecesariasRealizacion(BigDecimal horas)
+      throws ExcepcionValorNoValido, ExcepcionTrabajoFinalizado, ExcepcionTrabajoEliminado {
+    validarTrabajoEditable();
     validarImporteNoNegativo(horas, "Las horas no pueden ser negativas");
     this.horasNecesariasRealizacion = horas;
   }
@@ -94,6 +99,9 @@ public abstract class Trabajo implements Serializable {
   }
 
   public void setFinalizado(boolean finalizado) {
+    if (this.finalizado && !finalizado) {
+      throw new IllegalStateException("No se puede reabrir un trabajo finalizado");
+    }
     if (eliminado && finalizado) {
       throw new IllegalStateException("No se puede finalizar un trabajo eliminado");
     }
@@ -123,10 +131,9 @@ public abstract class Trabajo implements Serializable {
     if (this == objeto) {
       return true;
     }
-    if (objeto == null || getClass() != objeto.getClass()) {
+    if (!(objeto instanceof Trabajo otro)) {
       return false;
     }
-    Trabajo otro = (Trabajo) objeto;
     return id >= 0 && id == otro.id;
   }
 

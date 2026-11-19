@@ -52,7 +52,8 @@ public class AplicacionGestionGarajeGUI extends JFrame {
     public AplicacionGestionGarajeGUI() {
         super("Gestion de Garaje - GUI");
         this.garaje = GestorPersistenciaGaraje.cargarGaraje();
-        this.contador = GestorPersistenciaGaraje.cargarContador();
+        this.contador = GestorPersistenciaGaraje.reconciliarContador(garaje,
+                GestorPersistenciaGaraje.cargarContador());
         this.modeloLista = new DefaultListModel<String>();
         this.listaTrabajos = new JList<String>(modeloLista);
         this.campoFiltro = new JTextField(24);
