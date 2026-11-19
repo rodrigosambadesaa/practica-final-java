@@ -215,4 +215,34 @@ class TrabajoApiIntegrationTest {
         .andExpect(status().isBadRequest());
   }
 
+  @Test
+  void protegerOperacionesAdministrativasYConservarDatosCuandoFallaLaClave() throws Exception {
+    mockMvc.perform(post("/api/trabajos")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"tipo\":\"REVISION\",\"descripcion\":\"Persistir\"}"))
+        .andExpect(status().isCreated());
+
+    mockMvc.perform(post("/api/db/reset"))
+        .andExpect(status().isForbidden());
+    mockMvc.perform(post("/api/db/reset")
+        .header("X-Admin-Token", "incorrecto"))
+        .andExpect(status().isForbidden());
+    mockMvc.perform(post("/api/db/seed"))
+        .andExpect(status().isForbidden());
+    mockMvc.perform(post("/api/db/seed")
+        .header("X-Admin-Token", "incorrecto"))
+        .andExpect(status().isForbidden());
+    assertThat(repository.findByEliminadoFalseOrderByDescripcionAsc()).hasSize(1);
+
+    mockMvc.perform(post("/api/db/reset")
+        .header("X-Admin-Token", "integration-tests-only-abcdefghijklmnopqrstuvwxyz"))
+        .andExpect(status().isOk());
+    assertThat(repository.findByEliminadoFalseOrderByDescripcionAsc()).isEmpty();
+
+    mockMvc.perform(post("/api/db/seed")
+        .header("X-Admin-Token", "integration-tests-only-abcdefghijklmnopqrstuvwxyz"))
+        .andExpect(status().isOk());
+    assertThat(repository.findByEliminadoFalseOrderByDescripcionAsc()).hasSize(3);
+  }
+
 }
