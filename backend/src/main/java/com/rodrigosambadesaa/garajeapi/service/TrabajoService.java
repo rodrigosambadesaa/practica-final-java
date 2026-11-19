@@ -2,7 +2,7 @@ package com.rodrigosambadesaa.garajeapi.service;
 
 import java.math.BigDecimal;
 import java.util.List;
-
+ 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +18,8 @@ import com.rodrigosambadesaa.garajeapi.repository.TrabajoRepository;
 @Service
 @Transactional
 public class TrabajoService {
+
+  private static final BigDecimal MAX_CANTIDAD = new BigDecimal("9999999999.99");
 
   private final TrabajoRepository trabajoRepository;
 
@@ -37,24 +39,35 @@ public class TrabajoService {
   }
 
   public Trabajo crear(CrearTrabajoRequest request) {
+    if (request == null || request.tipo() == null || request.descripcion() == null
+        || request.descripcion().isBlank() || request.descripcion().trim().length() > 300) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo y descripcion validos son obligatorios");
+    }
     Trabajo t = new Trabajo();
     t.setTipo(request.tipo());
-    t.setDescripcion(request.descripcion().trim());
+    t.setDescripcion(request.descripcion());
     return trabajoRepository.save(t);
   }
 
   public Trabajo aumentarHoras(long id, BigDecimal horas) {
-    Trabajo t = obtener(id);
+    validarCantidad(horas);
+    Trabajo t = obtenerParaModificar(id);
     validarModificable(t);
-    t.setHoras(t.getHoras().add(horas));
+    BigDecimal total = t.getHoras().add(horas);
+    validarCantidad(total);
+    t.setHoras(total);
     return trabajoRepository.save(t);
   }
 
   public Trabajo aumentarMaterial(long id, AumentarMaterialRequest request) {
-    Trabajo t = obtener(id);
+    if (request == null || request.tipoMaterial() == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El tipo de material es obligatorio");
+    }
+    BigDecimal coste = request.coste();
+    validarCantidad(coste);
+    Trabajo t = obtenerParaModificar(id);
     validarModificable(t);
 
-    BigDecimal coste = request.coste();
     TipoMaterial tipoMaterial = request.tipoMaterial();
 
     if ( t.getTipo() == TrabajoTipo.REVISION ) {
@@ -66,28 +79,30 @@ public class TrabajoService {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
             "Una reparacion mecanica solo acepta material de tipo 'piezas'");
       }
-      t.setCostePiezas(t.getCostePiezas().add(coste));
+      BigDecimal total = t.getCostePiezas().add(coste);
+      validarCantidad(total);
+      t.setCostePiezas(total);
       return trabajoRepository.save(t);
     }
 
     switch (tipoMaterial) {
-      case PINTURA -> t.setCostePintura(t.getCostePintura().add(coste));
-      case CHAPA -> t.setCosteChapa(t.getCosteChapa().add(coste));
-      case PIEZAS -> t.setCostePiezas(t.getCostePiezas().add(coste));
+      case PINTURA -> t.setCostePintura(sumarCoste(t.getCostePintura(), coste));
+      case CHAPA -> t.setCosteChapa(sumarCoste(t.getCosteChapa(), coste));
+      case PIEZAS -> t.setCostePiezas(sumarCoste(t.getCostePiezas(), coste));
     }
 
     return trabajoRepository.save(t);
   }
 
   public Trabajo finalizar(long id) {
-    Trabajo t = obtener(id);
+    Trabajo t = obtenerParaModificar(id);
     validarModificable(t);
     t.setFinalizado(true);
     return trabajoRepository.save(t);
   }
 
   public void eliminar(long id) {
-    Trabajo t = obtener(id);
+    Trabajo t = obtenerParaModificar(id);
     t.setEliminado(true);
     trabajoRepository.save(t);
   }
@@ -120,6 +135,25 @@ public class TrabajoService {
     revision.setHoras(new BigDecimal("1.5"));
 
     trabajoRepository.saveAll(List.of(mecanica, chapa, revision));
+  }
+
+  private Trabajo obtenerParaModificar(long id) {
+    return trabajoRepository.findActiveByIdForUpdate(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trabajo no encontrado"));
+  }
+
+  private static BigDecimal sumarCoste(BigDecimal actual, BigDecimal incremento) {
+    BigDecimal total = actual.add(incremento);
+    validarCantidad(total);
+    return total;
+  }
+
+  private static void validarCantidad(BigDecimal cantidad) {
+    if (cantidad == null || cantidad.signum() < 0 || cantidad.stripTrailingZeros().scale() > 2
+        || cantidad.compareTo(MAX_CANTIDAD) > 0) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+          "La cantidad debe estar entre 0 y 9999999999.99, con dos decimales");
+    }
   }
 
   private void validarModificable(Trabajo trabajo) {

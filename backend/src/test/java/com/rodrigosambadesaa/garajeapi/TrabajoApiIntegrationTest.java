@@ -1,6 +1,8 @@
 package com.rodrigosambadesaa.garajeapi;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -124,6 +126,40 @@ class TrabajoApiIntegrationTest {
         .contentType(MediaType.APPLICATION_JSON)
         .content("{\"tipoMaterial\":\"metal\",\"coste\":10}"))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void validaCantidadesYPermiteImportesCero() throws Exception {
+    mockMvc.perform(post("/api/trabajos")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("""
+            {"tipo":"REPARACION_CHAPA_PINTURA","descripcion":"Aleta"}
+            """))
+        .andExpect(status().isCreated());
+
+    Long id = repository.findByEliminadoFalseOrderByDescripcionAsc().getFirst().getId();
+    mockMvc.perform(patch("/api/trabajos/{id}/horas", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"horas\":0}"))
+        .andExpect(status().isOk());
+    mockMvc.perform(patch("/api/trabajos/{id}/material", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"tipoMaterial\":\"pintura\",\"coste\":0}"))
+        .andExpect(status().isOk());
+    for (String cantidad : List.of("-1", "0.001", "10000000000")) {
+      mockMvc.perform(patch("/api/trabajos/{id}/horas", id)
+          .contentType(MediaType.APPLICATION_JSON)
+          .content("{\"horas\":" + cantidad + "}"))
+          .andExpect(status().isBadRequest());
+    }
+    mockMvc.perform(patch("/api/trabajos/{id}/material", id)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"tipoMaterial\":\"chapa\",\"coste\":-1}"))
+        .andExpect(status().isBadRequest());
+    mockMvc.perform(get("/api/trabajos/{id}", id))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.horas").value(0))
+        .andExpect(jsonPath("$.costeChapa").value(0));
   }
 
   @Test

@@ -1,6 +1,7 @@
 package com.rodrigosambadesaa.garajeapi.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 
@@ -29,6 +30,29 @@ class TrabajoTest {
 
     assertThat(trabajo.calcularPrecio()).isEqualByComparingTo("285");
     assertThat(trabajo.getPlazoDias()).isEqualTo(21);
+  }
+
+  @Test
+  void rechazaValoresInvalidosYEstadosIrreversibles() {
+    Trabajo trabajo = new Trabajo();
+    trabajo.setTipo(TrabajoTipo.REPARACION_MECANICA);
+    assertThatThrownBy(() -> trabajo.setHoras(new BigDecimal("-0.01")))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> trabajo.setHoras(new BigDecimal("1.001")))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> trabajo.setCostePiezas(new BigDecimal("10000000000")))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> trabajo.setCostePintura(BigDecimal.ONE))
+        .isInstanceOf(IllegalArgumentException.class);
+    trabajo.setHoras(BigDecimal.ZERO);
+    trabajo.setFinalizado(true);
+    assertThatThrownBy(() -> trabajo.setHoras(BigDecimal.ONE))
+        .isInstanceOf(IllegalStateException.class);
+    assertThatThrownBy(() -> trabajo.setFinalizado(false))
+        .isInstanceOf(IllegalStateException.class);
+    trabajo.setEliminado(true);
+    assertThatThrownBy(() -> trabajo.setEliminado(false))
+        .isInstanceOf(IllegalStateException.class);
   }
 
   @Test

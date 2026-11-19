@@ -2,6 +2,7 @@ package com.rodrigosambadesaa.garajeapi.domain;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,6 +18,12 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "trabajos")
 public class Trabajo {
+
+  private static final BigDecimal MAX_CANTIDAD = new BigDecimal("9999999999.99");
+  private static final BigDecimal PRECIO_HORA = new BigDecimal("30");
+  private static final BigDecimal EXTRA_REVISION = new BigDecimal("20");
+  private static final BigDecimal MARGEN_MECANICA = new BigDecimal("1.10");
+  private static final BigDecimal MARGEN_CHAPA_PINTURA = new BigDecimal("1.30");
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -78,13 +85,13 @@ public class Trabajo {
   }
 
   public BigDecimal calcularPrecio() {
-    BigDecimal fijo = getHoras().multiply(new BigDecimal("30"));
+    BigDecimal fijo = getHoras().multiply(PRECIO_HORA);
     BigDecimal material = getCostePiezas().add(getCostePintura()).add(getCosteChapa());
 
     return switch (tipo) {
-      case REPARACION_MECANICA -> fijo.add(material.multiply(new BigDecimal("1.1")));
-      case REPARACION_CHAPA_PINTURA -> fijo.add(material.multiply(new BigDecimal("1.3")));
-      case REVISION -> fijo.add(new BigDecimal("20"));
+      case REPARACION_MECANICA -> fijo.add(material.multiply(MARGEN_MECANICA));
+      case REPARACION_CHAPA_PINTURA -> fijo.add(material.multiply(MARGEN_CHAPA_PINTURA));
+      case REVISION -> fijo.add(EXTRA_REVISION);
     };
   }
 
@@ -109,7 +116,7 @@ public class Trabajo {
   }
 
   public void setTipo(TrabajoTipo tipo) {
-    this.tipo = tipo;
+    this.tipo = Objects.requireNonNull(tipo, "El tipo de trabajo es obligatorio");
   }
 
   public String getDescripcion() {
@@ -117,7 +124,11 @@ public class Trabajo {
   }
 
   public void setDescripcion(String descripcion) {
-    this.descripcion = descripcion;
+    String normalizada = Objects.requireNonNull(descripcion, "La descripcion es obligatoria").trim();
+    if (normalizada.isEmpty() || normalizada.length() > 300) {
+      throw new IllegalArgumentException("La descripcion debe tener entre 1 y 300 caracteres");
+    }
+    this.descripcion = normalizada;
   }
 
   public BigDecimal getHoras() {
@@ -125,7 +136,8 @@ public class Trabajo {
   }
 
   public void setHoras(BigDecimal horas) {
-    this.horas = horas;
+    validarEditable();
+    this.horas = validarCantidad(horas);
   }
 
   public BigDecimal getCostePiezas() {
@@ -133,7 +145,12 @@ public class Trabajo {
   }
 
   public void setCostePiezas(BigDecimal costePiezas) {
-    this.costePiezas = costePiezas;
+    validarEditable();
+    BigDecimal valor = validarCantidad(costePiezas);
+    if (tipo == TrabajoTipo.REVISION && valor.signum() > 0) {
+      throw new IllegalArgumentException("Una revision no admite material");
+    }
+    this.costePiezas = valor;
   }
 
   public BigDecimal getCostePintura() {
@@ -141,7 +158,12 @@ public class Trabajo {
   }
 
   public void setCostePintura(BigDecimal costePintura) {
-    this.costePintura = costePintura;
+    validarEditable();
+    BigDecimal valor = validarCantidad(costePintura);
+    if (tipo != TrabajoTipo.REPARACION_CHAPA_PINTURA && valor.signum() > 0) {
+      throw new IllegalArgumentException("La pintura solo corresponde a chapa y pintura");
+    }
+    this.costePintura = valor;
   }
 
   public BigDecimal getCosteChapa() {
@@ -149,7 +171,12 @@ public class Trabajo {
   }
 
   public void setCosteChapa(BigDecimal costeChapa) {
-    this.costeChapa = costeChapa;
+    validarEditable();
+    BigDecimal valor = validarCantidad(costeChapa);
+    if (tipo != TrabajoTipo.REPARACION_CHAPA_PINTURA && valor.signum() > 0) {
+      throw new IllegalArgumentException("La chapa solo corresponde a chapa y pintura");
+    }
+    this.costeChapa = valor;
   }
 
   public boolean isFinalizado() {
@@ -157,6 +184,12 @@ public class Trabajo {
   }
 
   public void setFinalizado(boolean finalizado) {
+    if (this.finalizado && !finalizado) {
+      throw new IllegalStateException("No se puede reabrir un trabajo finalizado");
+    }
+    if (eliminado && finalizado) {
+      throw new IllegalStateException("No se puede finalizar un trabajo eliminado");
+    }
     this.finalizado = finalizado;
   }
 
@@ -165,7 +198,24 @@ public class Trabajo {
   }
 
   public void setEliminado(boolean eliminado) {
+    if (this.eliminado && !eliminado) {
+      throw new IllegalStateException("No se puede restaurar un trabajo eliminado");
+    }
     this.eliminado = eliminado;
+  }
+
+  private void validarEditable() {
+    if (eliminado || finalizado) {
+      throw new IllegalStateException("No se puede modificar un trabajo eliminado o finalizado");
+    }
+  }
+
+  private static BigDecimal validarCantidad(BigDecimal cantidad) {
+    if (cantidad == null || cantidad.signum() < 0
+        || cantidad.stripTrailingZeros().scale() > 2 || cantidad.compareTo(MAX_CANTIDAD) > 0) {
+      throw new IllegalArgumentException("Cantidad no valida: debe estar entre 0 y 9999999999.99, con dos decimales");
+    }
+    return cantidad;
   }
 
   public LocalDateTime getCreadoEn() {
