@@ -3,6 +3,7 @@ package garaje;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 import excepcionesgaraje.ExcepcionValorNoValido;
 
@@ -18,6 +19,9 @@ public final class ModeloGarajeTest {
     pruebaHorarioConLocalTime();
     pruebaHorarioInvalido();
     pruebaPeriodosLaborales();
+    pruebaIntegridadDeEstadosYTipos();
+    pruebaOrdenacionEIdentificadoresUnicos();
+    pruebaImportesCeroYNegativos();
     System.out.println("Pruebas del modelo clasico: OK");
   }
 
@@ -85,6 +89,74 @@ public final class ModeloGarajeTest {
     } catch (IllegalArgumentException expected) {
       // Comportamiento esperado.
     }
+  }
+
+  private static void pruebaIntegridadDeEstadosYTipos() throws Exception {
+    Revision revision = new Revision("Revision");
+    revision.setId(20);
+    revision.setHorasNecesariasRealizacion(new BigDecimal("2"));
+    revision.setFinalizado(true);
+    assertThrows(() -> revision.setHorasNecesariasRealizacion(BigDecimal.TEN),
+        "No se deben modificar horas de un trabajo finalizado usando el setter");
+    assertThrows(() -> revision.setFinalizado(false), "No se deben reabrir trabajos terminados");
+    assertThrows(() -> revision.setId(22), "El identificador no puede reasignarse");
+
+    ReparacionMecanica mecanica = new ReparacionMecanica("Mecanica");
+    mecanica.setId(30);
+    mecanica.setFinalizado(true);
+    assertThrows(() -> mecanica.acumulaPrecioPiezasUtilizadas(BigDecimal.ONE),
+        "No se debe modificar el material de una reparacion terminada");
+    mecanica.setEliminado(true);
+    assertThrows(() -> mecanica.setEliminado(false), "No se debe deshacer el borrado logico");
+
+    Revision mismoId = new Revision("Otro tipo");
+    mismoId.setId(30);
+    assertTrue(mismoId.equals(mecanica), "La igualdad de trabajos depende de su ID, no de su subtipo");
+    assertEquals(mismoId.hashCode(), mecanica.hashCode(), "Igualdad y hash deben ser consistentes");
+  }
+
+  private static void pruebaOrdenacionEIdentificadoresUnicos() throws Exception {
+    Garaje garaje = new Garaje();
+    Revision zeta = new Revision("Zeta");
+    zeta.setId(0);
+    Revision alfa = new Revision("Alfa");
+    alfa.setId(1);
+    garaje.registrarTrabajo(zeta);
+    garaje.registrarTrabajo(alfa);
+    assertEquals(alfa, garaje.getTrabajos().getFirst(), "El listado debe estar ordenado");
+    zeta.setDescripcion("Aardvark");
+    assertEquals(zeta, garaje.getTrabajos().getFirst(), "Debe reordenarse tras cambiar la descripcion");
+    assertThrows(() -> garaje.registrarTrabajo(zeta), "No se permiten IDs duplicados");
+    assertThrows(() -> garaje.setTrabajos(List.of(zeta, zeta)),
+        "La carga de una lista tambien debe validar IDs duplicados");
+    garaje.setTrabajos(List.of(alfa, zeta));
+    assertEquals(zeta, garaje.getTrabajos().getFirst(), "setTrabajos debe ordenar los elementos");
+  }
+
+  private static void pruebaImportesCeroYNegativos() throws Exception {
+    ReparacionChapaYPintura chapa = new ReparacionChapaYPintura("Chapa");
+    chapa.acumulaPrecioChapa(BigDecimal.ZERO);
+    chapa.acumulaPrecioPintura(BigDecimal.ZERO);
+    chapa.acumulaPrecioPiezasUtilizadas(BigDecimal.ZERO);
+    assertBigDecimal("0", chapa.getPrecioPiezasUtilizadas(), "Se admiten materiales de coste cero");
+    assertThrows(() -> chapa.acumulaPrecioChapa(new BigDecimal("-0.01")),
+        "Se deben rechazar importes de material negativos");
+    assertThrows(() -> chapa.acumulaHorasNecesariasRealizacion(new BigDecimal("-1")),
+        "Se deben rechazar horas negativas");
+  }
+
+  @FunctionalInterface
+  private interface Operacion {
+    void ejecutar() throws Exception;
+  }
+
+  private static void assertThrows(Operacion operacion, String mensaje) throws Exception {
+    try {
+      operacion.ejecutar();
+    } catch (Exception expected) {
+      return;
+    }
+    throw new AssertionError(mensaje);
   }
 
   private static void assertBigDecimal(String esperado, BigDecimal actual, String mensaje) {

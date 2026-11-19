@@ -4,7 +4,9 @@ import java.io.Serializable;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Objects;
 
 import excepcionesgaraje.ExcepcionGarajeLleno;
@@ -57,7 +59,11 @@ public class Garaje implements Serializable {
   }
 
   public void registrarTrabajo(Trabajo trabajo) {
-    trabajos.add(Objects.requireNonNull(trabajo, "El trabajo no puede ser nulo"));
+    Objects.requireNonNull(trabajo, "El trabajo no puede ser nulo");
+    if (trabajo.getId() < 0 || existeTrabajo(trabajo.getId())) {
+      throw new IllegalArgumentException("El trabajo debe tener un identificador unico y asignado");
+    }
+    trabajos.add(trabajo);
     trabajos.sort(new ComparadorDescripcion());
   }
 
@@ -66,11 +72,22 @@ public class Garaje implements Serializable {
   }
 
   public List<Trabajo> getTrabajos() {
+    // Una descripcion puede cambiar despues de registrar un trabajo.
+    trabajos.sort(new ComparadorDescripcion());
     return List.copyOf(trabajos);
   }
 
   public void setTrabajos(List<Trabajo> trabajos) {
-    this.trabajos = new ArrayList<>(Objects.requireNonNullElse(trabajos, List.of()));
+    List<Trabajo> copia = new ArrayList<>(Objects.requireNonNullElse(trabajos, List.of()));
+    Set<Long> identificadores = new HashSet<>();
+    for (Trabajo trabajo : copia) {
+      Objects.requireNonNull(trabajo, "La lista no puede contener trabajos nulos");
+      if (trabajo.getId() < 0 || !identificadores.add(trabajo.getId())) {
+        throw new IllegalArgumentException("Los trabajos deben tener identificadores unicos y asignados");
+      }
+    }
+    copia.sort(new ComparadorDescripcion());
+    this.trabajos = copia;
   }
 
   public List<Empleado> getEmpleados() {
@@ -142,7 +159,7 @@ public class Garaje implements Serializable {
       return "TRABAJOS\n(No hay trabajos registrados)";
     }
     StringBuilder resultado = new StringBuilder("TRABAJOS");
-    trabajos.forEach(trabajo -> resultado.append("\n--------------------\n").append(trabajo));
+    getTrabajos().forEach(trabajo -> resultado.append("\n--------------------\n").append(trabajo));
     return resultado.toString();
   }
 }

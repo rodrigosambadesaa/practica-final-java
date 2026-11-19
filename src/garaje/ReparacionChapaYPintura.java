@@ -25,14 +25,14 @@ public class ReparacionChapaYPintura extends Reparacion implements Plazo {
   public void acumulaPrecioPintura(BigDecimal importe)
       throws ExcepcionValorNoValido, ExcepcionTrabajoFinalizado, ExcepcionTrabajoEliminado {
     validarTrabajoEditable();
-    validarImportePositivo(importe, "El precio de la pintura debe ser positivo");
+    validarImporteNoNegativo(importe, "El precio de la pintura no puede ser negativo");
     precioPintura = getPrecioPintura().add(importe);
   }
 
   public void acumulaPrecioChapa(BigDecimal importe)
       throws ExcepcionValorNoValido, ExcepcionTrabajoFinalizado, ExcepcionTrabajoEliminado {
     validarTrabajoEditable();
-    validarImportePositivo(importe, "El precio de la chapa debe ser positivo");
+    validarImporteNoNegativo(importe, "El precio de la chapa no puede ser negativo");
     precioChapa = getPrecioChapa().add(importe);
   }
 

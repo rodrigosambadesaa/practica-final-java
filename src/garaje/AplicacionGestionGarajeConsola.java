@@ -51,6 +51,8 @@ public final class AplicacionGestionGarajeConsola {
         5. Mostrar trabajos
         6. Eliminar trabajo
         7. Guardar y salir
+        8. Consultar plazo de un trabajo
+        9. Mostrar trabajo por ID
         """);
   }
 
@@ -81,6 +83,15 @@ public final class AplicacionGestionGarajeConsola {
         yield true;
       }
       case 7 -> false;
+      case 8 -> {
+        Trabajo trabajo = obtenerTrabajo();
+        System.out.println("Plazo maximo: " + trabajo.plazoMaximo() + " dias");
+        yield true;
+      }
+      case 9 -> {
+        System.out.println(obtenerTrabajo());
+        yield true;
+      }
       default -> throw new IllegalArgumentException("Opcion no valida");
     };
   }
