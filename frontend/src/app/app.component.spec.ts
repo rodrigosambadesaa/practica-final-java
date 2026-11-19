@@ -79,4 +79,26 @@ describe('AppComponent', () => {
     expect(component.descripcion).toBe('');
     expect(component.mensaje()).toBe('Trabajo creado');
   });
+  it('acepta importes de dos decimales como 0,29 y rechaza milésimas', () => {
+    const component = TestBed.createComponent(AppComponent).componentInstance;
+    component.trabajos.set([trabajo]);
+    component.trabajoSeleccionadoId = trabajo.id;
+    component.horas = 0.29;
+    component.aumentarHoras();
+    expect(api.aumentarHoras).toHaveBeenCalledWith(7, 0.29);
+    vi.clearAllMocks();
+    component.horas = 0.001;
+    component.aumentarHoras();
+    expect(api.aumentarHoras).not.toHaveBeenCalled();
+    expect(component.error()).toContain('dos decimales');
+  });
+
+  it('rechaza cargar material sobre revisiones', () => {
+    const component = TestBed.createComponent(AppComponent).componentInstance;
+    component.trabajos.set([trabajo]);
+    component.trabajoSeleccionadoId = trabajo.id;
+    component.aumentarMaterial();
+    expect(api.aumentarMaterial).not.toHaveBeenCalled();
+  });
+
 });
